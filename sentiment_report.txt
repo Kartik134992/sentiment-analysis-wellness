@@ -1,5 +1,8 @@
-Workplace Sentiment Analysis Report
-=================================
+SentimentSense – HR Sentiment Analysis Executive Report
+====================================================
+
+Key Insights:
+✅ No significant decline in morale detected.
 
 Overall Sentiment Distribution:
 positive: 6 entries (60.0%)
@@ -13,3 +16,7 @@ Subjectivity: 0.59
 Most Common Emotions:
 joy: 2 occurrences
 anger: 1 occurrences
+
+Actionable Recommendations:
+- Maintain current engagement strategies and monitor for changes.
+- Recognize and reward positive contributors.

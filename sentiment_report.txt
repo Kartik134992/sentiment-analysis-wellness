@@ -1,0 +1,15 @@
+Workplace Sentiment Analysis Report
+=================================
+
+Overall Sentiment Distribution:
+positive: 6 entries (60.0%)
+negative: 2 entries (20.0%)
+neutral: 2 entries (20.0%)
+
+Average Sentiment Scores:
+Polarity: 0.27
+Subjectivity: 0.59
+
+Most Common Emotions:
+joy: 2 occurrences
+anger: 1 occurrences

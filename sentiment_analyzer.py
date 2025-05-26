@@ -42,6 +42,20 @@ class WorkplaceSentimentAnalyzer:
         
         return df
 
+    def flag_declining_morale(self, df):
+        # Flag if negative sentiment is above 30% or if last 3 entries are negative
+        negative_ratio = (df['sentiment'] == 'negative').mean()
+        recent_negatives = (df.tail(3)['sentiment'] == 'negative').sum()
+        declining = False
+        reason = ""
+        if negative_ratio > 0.3:
+            declining = True
+            reason = f"High negative sentiment detected: {negative_ratio*100:.1f}% of feedback is negative."
+        elif recent_negatives >= 2:
+            declining = True
+            reason = "Recent feedback shows a spike in negative sentiment."
+        return declining, reason
+
     def generate_visualizations(self, df, output_dir='.'):
         """Generate and save visualizations of the analysis results."""
         # Ensure output directory exists
@@ -51,17 +65,22 @@ class WorkplaceSentimentAnalyzer:
         
         # 1. Sentiment Distribution
         plt.figure(figsize=(10, 6))
-        sns.countplot(data=df, x='sentiment')
-        plt.title('Distribution of Sentiment Categories')
+        sns.countplot(data=df, x='sentiment', palette='Set2')
+        plt.title('SentimentSense – HR Sentiment Distribution')
+        plt.suptitle('Distribution of Employee Sentiment in HR Feedback', fontsize=10, y=0.93)
+        plt.xlabel('Sentiment Category')
+        plt.ylabel('Number of Entries')
         plt.savefig(f'{output_dir}/sentiment_distribution.png')
         plt.close()
         
         # 2. Sentiment Over Time
         plt.figure(figsize=(12, 6))
-        df.set_index('timestamp')['polarity'].rolling(window=7).mean().plot()
-        plt.title('Sentiment Trend Over Time (7-day rolling average)')
+        df.set_index('timestamp')['polarity'].rolling(window=3).mean().plot(marker='o')
+        plt.title('SentimentSense – Sentiment Trend Over Time')
+        plt.suptitle('7-day Rolling Average of Sentiment Polarity', fontsize=10, y=0.93)
         plt.xlabel('Date')
         plt.ylabel('Sentiment Polarity')
+        plt.grid(True, linestyle='--', alpha=0.5)
         plt.savefig(f'{output_dir}/sentiment_trend.png')
         plt.close()
         
@@ -69,39 +88,54 @@ class WorkplaceSentimentAnalyzer:
         emotion_counts = pd.DataFrame([emotion for emotions in df['emotions'] for emotion in emotions.items()],
                                     columns=['emotion', 'count'])
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=emotion_counts, x='emotion', y='count')
-        plt.title('Distribution of Emotions')
+        sns.barplot(data=emotion_counts, x='emotion', y='count', palette='Set1')
+        plt.title('SentimentSense – Emotion Distribution in HR Feedback')
+        plt.suptitle('Frequency of Detected Emotions', fontsize=10, y=0.93)
+        plt.xlabel('Emotion')
+        plt.ylabel('Occurrences')
         plt.xticks(rotation=45)
         plt.savefig(f'{output_dir}/emotion_distribution.png')
         plt.close()
 
     def generate_report(self, df, output_file='sentiment_report.txt'):
         """Generate a text report of the analysis results."""
-        with open(output_file, 'w') as f:
-            f.write("Workplace Sentiment Analysis Report\n")
-            f.write("=================================\n\n")
-            
+        declining, reason = self.flag_declining_morale(df)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("SentimentSense – HR Sentiment Analysis Executive Report\n")
+            f.write("====================================================\n\n")
+            f.write("Key Insights:\n")
+            if declining:
+                f.write(f"⚠️  Declining morale flagged: {reason}\n")
+            else:
+                f.write("✅ No significant decline in morale detected.\n")
+            f.write("\n")
             # Overall sentiment distribution
             sentiment_dist = df['sentiment'].value_counts()
             f.write("Overall Sentiment Distribution:\n")
             for sentiment, count in sentiment_dist.items():
                 f.write(f"{sentiment}: {count} entries ({count/len(df)*100:.1f}%)\n")
             f.write("\n")
-            
             # Average sentiment scores
             f.write("Average Sentiment Scores:\n")
             f.write(f"Polarity: {df['polarity'].mean():.2f}\n")
             f.write(f"Subjectivity: {df['subjectivity'].mean():.2f}\n\n")
-            
             # Most common emotions
             emotion_counts = pd.DataFrame([emotion for emotions in df['emotions'] for emotion in emotions.items()],
                                         columns=['emotion', 'count'])
             f.write("Most Common Emotions:\n")
             for emotion, count in emotion_counts.groupby('emotion')['count'].sum().sort_values(ascending=False).items():
                 f.write(f"{emotion}: {count} occurrences\n")
+            f.write("\nActionable Recommendations:\n")
+            if declining:
+                f.write("- Investigate recent negative feedback and engage with affected teams.\n")
+                f.write("- Consider pulse surveys or focus groups to understand root causes.\n")
+                f.write("- Communicate support resources and HR initiatives proactively.\n")
+            else:
+                f.write("- Maintain current engagement strategies and monitor for changes.\n")
+                f.write("- Recognize and reward positive contributors.\n")
 
 def main():
-    parser = argparse.ArgumentParser(description='Workplace Sentiment Analysis')
+    parser = argparse.ArgumentParser(description='SentimentSense – HR Sentiment Analysis')
     parser.add_argument('--input', required=True, help='Path to input CSV file')
     parser.add_argument('--output-dir', default='.', help='Output directory for visualizations')
     args = parser.parse_args()
